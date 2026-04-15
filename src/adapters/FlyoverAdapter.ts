@@ -1,4 +1,5 @@
 import { Flyover } from '@rsksmart/flyover-sdk';
+import { BlockchainReadOnlyConnection } from '@rsksmart/bridges-core-sdk';
 import type { FlyoverQuote, IFlyoverAdapter } from './types.js';
 
 export class FlyoverAdapter implements IFlyoverAdapter {
@@ -13,6 +14,12 @@ export class FlyoverAdapter implements IFlyoverAdapter {
             network: this.network,
             captchaTokenResolver: captchaResolver || (() => Promise.resolve('dummy'))
         });
+
+        // Initialize RSK connection, which is required for fetching quotes
+        const defaultRpc = network === 'Testnet' ? 'https://public-node.testnet.rsk.co' : 'https://public-node.rsk.co';
+        BlockchainReadOnlyConnection.createUsingRpc(defaultRpc)
+            .then(conn => this.client.connectToRsk(conn))
+            .catch(console.error);
     }
 
     async getQuote(btcAmount: bigint, destinationHex: string): Promise<FlyoverQuote> {

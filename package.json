@@ -1,5 +1,5 @@
 {
-  "name": "zapkit",
+  "name": "zap",
   "version": "0.1.0",
   "description": "TypeScript SDK Scaffold",
   "main": "dist/index.js",
@@ -34,6 +34,7 @@
     "jsdom": "^29.0.1",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2",
+    "vite-plugin-node-polyfills": "^0.26.0",
     "vitest": "^2.1.8"
   },
   "keywords": [
@@ -46,6 +47,7 @@
     "@rsksmart/bridges-core-sdk": "^0.5.0",
     "@rsksmart/flyover-sdk": "^1.8.0",
     "@rsksmart/rsk-swap-sdk": "^1.3.0",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   }

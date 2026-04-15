@@ -10,8 +10,16 @@ export function useZapIn(config: ZapConfig) {
         return () => { unsubscribe(); };
     }, [machine]);
 
-    // Automatically teardown Flyover socket listeners when hook is totally unmounted
+    // Hot-swap configuration variables when they change
     useEffect(() => {
+        machine.flyover = config.flyover;
+        machine.swap = config.swap;
+        machine.signer = config.signer;
+    }, [config, machine]);
+
+    // Automatically start the machine and teardown on unmount
+    useEffect(() => {
+        machine.start();
         return () => { machine.abort(); };
     }, [machine]);
 

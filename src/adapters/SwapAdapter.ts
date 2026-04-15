@@ -45,9 +45,9 @@ export class SwapAdapter implements ISwapAdapter {
                 expectedTokenAmount: BigInt(best?.total || 0),
                 slippagePercent: 0.5, // Slippage not provided by API directly, use default 0.5%
             };
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to estimate swap:", error);
-            throw new Error("Swap estimation failed");
+            throw new Error(error.message || "Swap estimation failed");
         }
     }
 

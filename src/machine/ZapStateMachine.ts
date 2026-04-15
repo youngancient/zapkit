@@ -10,9 +10,9 @@ export interface ZapConfig {
 
 export class ZapStateMachine {
     private state: ZapState = 'IDLE';
-    private flyover: IFlyoverAdapter;
-    private swap: ISwapAdapter;
-    private signer?: any;
+    public flyover: IFlyoverAdapter;
+    public swap: ISwapAdapter;
+    public signer?: any;
 
     private stateListeners: Set<(state: ZapState) => void> = new Set();
     private errorMsg: string | undefined;
@@ -29,12 +29,16 @@ export class ZapStateMachine {
         this.flyover = config.flyover;
         this.swap = config.swap;
         this.signer = config.signer;
+    }
 
-        this.unsubscribePegIn = this.flyover.onPegIn((_rbtcArrived) => {
-            if (this.state === 'AWAITING_DEPOSIT') {
-                this.transition('PEG_IN_DETECTED');
-            }
-        });
+    public start() {
+        if (!this.unsubscribePegIn) {
+            this.unsubscribePegIn = this.flyover.onPegIn((_rbtcArrived) => {
+                if (this.state === 'AWAITING_DEPOSIT') {
+                    this.transition('PEG_IN_DETECTED');
+                }
+            });
+        }
     }
 
     public subscribe(listener: (state: ZapState) => void) {
@@ -106,6 +110,7 @@ export class ZapStateMachine {
     public abort() {
         if (this.unsubscribePegIn) {
             this.unsubscribePegIn();
+            this.unsubscribePegIn = undefined;
         }
         this.reset();
     }

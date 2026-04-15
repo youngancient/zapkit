@@ -1,10 +1,22 @@
 import React, { useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useZapIn } from '../hooks/useZapIn.js';
 import type { ZapConfig } from '../machine/ZapStateMachine.js';
 
-export const ZapWidget: React.FC<{ config: ZapConfig }> = ({ config }) => {
+export interface ZapWidgetProps {
+    config: ZapConfig;
+    isConnected?: boolean;
+    onConnect?: () => void;
+    onStateChange?: (state: string) => void;
+}
+
+export const ZapWidget: React.FC<ZapWidgetProps> = ({ config, isConnected = true, onConnect, onStateChange }) => {
     const zap = useZapIn(config);
     const [btcAmount, setBtcAmount] = useState<string>('0.1');
+
+    React.useEffect(() => {
+        if (onStateChange) onStateChange(zap.state);
+    }, [zap.state, onStateChange]);
     const [targetProtocol, setTargetProtocol] = useState<string>('RIF');
 
     const handleEstimate = () => {
@@ -50,10 +62,10 @@ export const ZapWidget: React.FC<{ config: ZapConfig }> = ({ config }) => {
                     </div>
 
                     <button
-                        className="mt-4 p-4 bg-gradient-to-r from-[#FF9100] to-[#E68200] hover:scale-[1.02] active:scale-95 text-black font-black uppercase tracking-widest rounded-2xl transition-all shadow-[0_0_20px_rgba(255,145,0,0.3)]"
-                        onClick={handleEstimate}
+                        className={`mt-4 p-4 ${isConnected ? 'bg-gradient-to-r from-[#FF9100] to-[#E68200] hover:scale-[1.02] active:scale-95 text-black' : 'bg-gray-700 text-gray-400 cursor-not-allowed'} font-black uppercase tracking-widest rounded-2xl transition-all shadow-[0_0_20px_rgba(255,145,0,0.3)]`}
+                        onClick={isConnected ? handleEstimate : (onConnect ? onConnect : undefined)}
                     >
-                        Get Quote
+                        {isConnected ? "Get Quote" : "Connect Wallet"}
                     </button>
 
                     {zap.flyoverQuote && zap.swapQuote && (
@@ -68,8 +80,9 @@ export const ZapWidget: React.FC<{ config: ZapConfig }> = ({ config }) => {
                                 <span className="font-mono text-[#FF9100] text-lg drop-shadow-md">{formatToken(zap.swapQuote.expectedTokenAmount)} {targetProtocol}</span>
                             </div>
                             <button
-                                className="mt-5 p-4 bg-white hover:bg-gray-200 text-black font-black uppercase tracking-widest rounded-xl transition-colors shadow-[0_0_15px_rgba(255,255,255,0.2)]"
-                                onClick={zap.deposit}
+                                className={`mt-5 p-4 ${isConnected ? 'bg-white hover:bg-gray-200 text-black' : 'bg-gray-700 text-gray-500 cursor-not-allowed'} font-black uppercase tracking-widest rounded-xl transition-colors shadow-[0_0_15px_rgba(255,255,255,0.2)]`}
+                                onClick={isConnected ? zap.deposit : undefined}
+                                disabled={!isConnected}
                             >
                                 Start Deposit
                             </button>
@@ -91,11 +104,8 @@ export const ZapWidget: React.FC<{ config: ZapConfig }> = ({ config }) => {
                         SEND EXACTLY <br /><span className="text-2xl text-white font-black mt-1 inline-block drop-shadow-md">{formatBtc(zap.btcInput)} BTC</span>
                     </p>
                     <div className="p-4 bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 shadow-inner">
-                        {/* Elegant QR Mock */}
-                        <div className="w-48 h-48 bg-white/90 border-4 border-transparent rounded-2xl flex items-center justify-center text-gray-800 font-black text-2xl relative overflow-hidden group">
-                            <div className="absolute inset-0 border-[16px] border-white/20"></div>
-                            <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(0,0,0,0.1)_25%,rgba(0,0,0,0.1)_50%,transparent_50%,transparent_75%,rgba(0,0,0,0.1)_75%,rgba(0,0,0,0.1)_100%)] bg-[length:20px_20px]"></div>
-                            <span className="relative z-10 bg-white px-2 py-1 rounded shadow">QR</span>
+                        <div className="w-48 h-48 bg-white/90 border-4 border-transparent rounded-2xl flex items-center justify-center relative overflow-hidden group p-2">
+                            <QRCodeSVG value={zap.flyoverQuote.depositAddress} size={176} fgColor="#111" bgColor="transparent" />
                         </div>
                     </div>
                     <span className="font-mono bg-black/50 p-3 rounded-xl text-xs break-all border border-white/10 w-full text-center text-gray-300 shadow-inner">
@@ -147,7 +157,7 @@ export const ZapWidget: React.FC<{ config: ZapConfig }> = ({ config }) => {
                     </div>
                     <h3 className="text-3xl font-black text-white drop-shadow-md">Zapped!</h3>
                     <p className="text-center text-base font-medium text-gray-300">
-                        Successfully obtained <b className="text-[#FF9100] drop-shadow">{zap.targetToken}</b> via RSK Swap.
+                        Successfully obtained <b className="text-[#FF9100] drop-shadow">{zap.swapQuote ? formatToken(zap.swapQuote.expectedTokenAmount) : ''} {zap.targetToken}</b> via RSK Swap.
                     </p>
                     {zap.txHash && (
                         <div className="w-full mt-2">
